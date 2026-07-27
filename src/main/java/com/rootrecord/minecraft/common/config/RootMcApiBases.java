@@ -1,0 +1,60 @@
+package com.rootrecord.minecraft.common.config;
+
+/**
+ * API base URLs for Paper → Cloudflare Worker / edge.
+ * Public default is production {@code api.rootmc.net}. Operators may set
+ * {@code cloud.api-base} / {@code license.api-base} to a mirror or local tunnel.
+ */
+public final class RootMcApiBases {
+
+    public static final String PRODUCTION = "https://api.rootmc.net";
+    public static final String LOCAL_EDGE = "https://api-local.rootmc.net";
+
+    private RootMcApiBases() {}
+
+    public static String normalize(String base) {
+        if (base == null || base.isBlank()) {
+            return PRODUCTION;
+        }
+        return base.trim().replaceAll("/+$", "");
+    }
+
+    /** Default when configs omit api-base — public Cloudflare Worker. */
+    public static String defaultBase() {
+        return PRODUCTION;
+    }
+
+    /**
+     * Alternate base to try after HTTP 429 / CF 1027.
+     * @return null if no useful alternate
+     */
+    public static String alternateAfterThrottle(String primary) {
+        String p = normalize(primary);
+        if (p.equalsIgnoreCase(PRODUCTION)) {
+            return LOCAL_EDGE;
+        }
+        if (p.equalsIgnoreCase(LOCAL_EDGE)) {
+            return null;
+        }
+        return LOCAL_EDGE;
+    }
+
+    public static boolean looksLikeThrottle(int status, String body) {
+        if (status == 429) {
+            return true;
+        }
+        if (body == null) {
+            return false;
+        }
+        String b = body.toLowerCase();
+        return b.contains("error code: 1027") || b.contains("error code 1027") || b.contains("1027");
+    }
+
+    public static boolean looksLikeThrottleMessage(String message) {
+        if (message == null) {
+            return false;
+        }
+        String m = message.toLowerCase();
+        return m.contains("http 429") || m.contains("1027") || m.contains("too many requests");
+    }
+}
