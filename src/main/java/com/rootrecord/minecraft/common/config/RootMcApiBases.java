@@ -25,6 +25,30 @@ public final class RootMcApiBases {
     }
 
     /**
+     * Prefer local edge for production (avoids Worker free-tier 1027), but callers must
+     * fall back to {@link #PRODUCTION} when the tunnel is down (CF 530 / 1033).
+     */
+    public static String preferredBase(String configured) {
+        String p = normalize(configured);
+        if (p.equalsIgnoreCase(PRODUCTION)) {
+            return LOCAL_EDGE;
+        }
+        return p;
+    }
+
+    /** Fallback when preferred base fails (tunnel down, DNS, etc.). */
+    public static String fallbackBase(String preferred) {
+        String p = normalize(preferred);
+        if (p.equalsIgnoreCase(LOCAL_EDGE)) {
+            return PRODUCTION;
+        }
+        if (p.equalsIgnoreCase(PRODUCTION)) {
+            return LOCAL_EDGE;
+        }
+        return PRODUCTION;
+    }
+
+    /**
      * Alternate base to try after HTTP 429 / CF 1027.
      * @return null if no useful alternate
      */
@@ -34,7 +58,7 @@ public final class RootMcApiBases {
             return LOCAL_EDGE;
         }
         if (p.equalsIgnoreCase(LOCAL_EDGE)) {
-            return null;
+            return PRODUCTION;
         }
         return LOCAL_EDGE;
     }
@@ -56,5 +80,20 @@ public final class RootMcApiBases {
         }
         String m = message.toLowerCase();
         return m.contains("http 429") || m.contains("1027") || m.contains("too many requests");
+    }
+
+    /** Tunnel / edge unreachable — fall back to production Worker. */
+    public static boolean looksLikeEdgeDownMessage(String message) {
+        if (message == null) {
+            return false;
+        }
+        String m = message.toLowerCase();
+        return m.contains("http 530")
+                || m.contains("error code: 1033")
+                || m.contains("error code 1033")
+                || m.contains("cloudflare tunnel")
+                || m.contains("connection refused")
+                || m.contains("timed out")
+                || m.contains("unknown host");
     }
 }

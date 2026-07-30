@@ -2,7 +2,7 @@
 
 Shared Java library for RootMC Paper plugins (not a Bukkit plugin - do **not** drop this jar into `plugins/` alone).
 
-**Version:** `1.7.0`
+**Version:** `1.7.1`
 **Group:** `com.rootrecord.minecraft`
 **Author:** Root Record
 

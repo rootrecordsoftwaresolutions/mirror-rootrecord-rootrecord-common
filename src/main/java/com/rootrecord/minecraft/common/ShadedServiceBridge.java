@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
@@ -159,6 +160,33 @@ public final class ShadedServiceBridge {
                 return null;
             }
             return new ReflectivePublicReachout(reachout);
+        } catch (ReflectiveOperationException ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolve Root-Discord API. Returns null when the plugin is missing/disabled
+     * (callers must drop Discord sends — do not invent a fallback bot).
+     */
+    public static RootDiscordApi resolveDiscord(Plugin consumer) {
+        RootDiscordApi local = localRegistration(RootDiscordApi.class);
+        if (local != null) {
+            return local;
+        }
+        Plugin discord = Bukkit.getPluginManager().getPlugin(RootDiscordSupport.PLUGIN_NAME);
+        if (discord == null || !discord.isEnabled()) {
+            return null;
+        }
+        try {
+            Object api = discord.getClass().getMethod("discordApi").invoke(discord);
+            if (api == null) {
+                return null;
+            }
+            if (api instanceof RootDiscordApi typed) {
+                return typed;
+            }
+            return new ReflectiveDiscordApi(api);
         } catch (ReflectiveOperationException ex) {
             return null;
         }
@@ -876,6 +904,62 @@ public final class ShadedServiceBridge {
             return (T) b;
         }
         return (T) result;
+    }
+
+    private static final class ReflectiveDiscordApi implements RootDiscordApi {
+        private final Object target;
+
+        ReflectiveDiscordApi(Object target) {
+            this.target = target;
+        }
+
+        @Override
+        public boolean isReady() {
+            try {
+                Object v = target.getClass().getMethod("isReady").invoke(target);
+                return v instanceof Boolean b && b;
+            } catch (ReflectiveOperationException ex) {
+                return false;
+            }
+        }
+
+        @Override
+        public void postChatLine(String username, String message, String kind) {
+            try {
+                target.getClass()
+                        .getMethod("postChatLine", String.class, String.class, String.class)
+                        .invoke(target, username, message, kind);
+            } catch (ReflectiveOperationException ignored) {
+            }
+        }
+
+        @Override
+        public void postReachout(String username, String uuidOrNull, String message, String kind) {
+            try {
+                target.getClass()
+                        .getMethod("postReachout", String.class, String.class, String.class, String.class)
+                        .invoke(target, username, uuidOrNull, message, kind);
+            } catch (ReflectiveOperationException ignored) {
+            }
+        }
+
+        @Override
+        public void uploadServerLog(File file, String caption) {
+            try {
+                target.getClass()
+                        .getMethod("uploadServerLog", File.class, String.class)
+                        .invoke(target, file, caption);
+            } catch (ReflectiveOperationException ignored) {
+            }
+        }
+
+        @Override
+        public void reload() {
+            try {
+                target.getClass().getMethod("reload").invoke(target);
+            } catch (ReflectiveOperationException ignored) {
+            }
+        }
     }
 
     private static final class ReflectivePublicReachout implements RootMcPublicReachout {

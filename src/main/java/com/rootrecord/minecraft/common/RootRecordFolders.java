@@ -64,8 +64,15 @@ public final class RootRecordFolders {
     public static final String ROOT_TRY_CONFIG = "root-try.yml";
     /** Root-Referrals player referral network — {@code plugins/RootMC/root-referrals.yml}. */
     public static final String ROOT_REFERRALS_CONFIG = "root-referrals.yml";
+    public static final String ROOT_APPRECIATION_CONFIG = "root-appreciation.yml";
+    /** Root-Memberships Pro/life group sync — {@code plugins/RootMC/root-memberships.yml}. */
+    public static final String ROOT_MEMBERSHIPS_CONFIG = "root-memberships.yml";
     /** Root-Ping connection samples — {@code plugins/RootMC/root-ping.yml}. */
     public static final String ROOT_PING_CONFIG = "root-ping.yml";
+    /** Root-Discord chat / bot flags — {@code plugins/RootMC/root-discord.yml}. */
+    public static final String ROOT_DISCORD_CONFIG = "root-discord.yml";
+    /** Root-Gamble games — {@code plugins/RootMC/root-gamble.yml}. */
+    public static final String ROOT_GAMBLE_CONFIG = "root-gamble.yml";
     /** BlueMap R2 sidecar secrets — {@code plugins/RootMC/r2.env}. */
     public static final String ROOT_BLUEMAP_R2_ENV = "r2.env";
     public static final String DOWNLOADED_PLUGINS_STATE = "downloaded-plugins.yml";
